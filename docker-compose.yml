@@ -1,0 +1,53 @@
+services:
+  chatglm3-qlora-training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatglm3-qlora-training
+    image: chatglm3-qlora:latest
+    
+    # GPU 支持（RTX 5080）
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    
+    # 增加共享内存（对模型加载有帮助）
+    shm_size: '8gb'
+    
+    # 环境变量
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONIOENCODING=utf-8
+      - CUDA_VISIBLE_DEVICES=0
+      - HF_HOME=/app/models
+      - TRANSFORMERS_CACHE=/app/models
+      - HUGGINGFACE_HUB_TOKEN=${HUGGINGFACE_HUB_TOKEN}
+      - BITSANDBYTES_NOWELCOME=1
+      - LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/local/cuda/lib
+    
+    # 卷挂载
+    volumes:
+      - .:/app
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./.env:/app/.env:ro
+    
+    # 工作目录
+    working_dir: /app
+    
+    stdin_open: true
+    tty: true
+    
+    # 默认命令（可以在运行时覆盖）
+    command: >
+      bash -c "python train_chatglm3_advertise.py --dataset_path data/advertisegen.json --output_dir outputs/chatglm3-qlora --num_samples 10000 --per_device_train_batch_size 2 --gradient_accumulation_steps 8 --num_train_epochs 3 --bnb_dtype float16 --train_dtype fp16 --prompt_template '问题：{instruction}\n回答：{response}' --bnb_mode none --bnb_double_quant True --bnb_llm_int8_threshold 6.0 --lora_r 4 --lora_alpha 32 --lora_dropout 0.05 --target_modules query_key_value --skip_baseline"
+
+networks:
+  default:
+    name: chatglm3-qlora-network
+
