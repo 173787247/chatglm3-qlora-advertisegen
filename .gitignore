@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# 环境变量和敏感信息
+.env
+*.env
+
+# 模型文件（如果太大，可以不上传，但训练结果应该上传）
+# models/
+# outputs/chatglm3-qlora/checkpoint-*/
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 大文件（可选，根据需求决定是否上传）
+# 如果 outputs 太大，可以只上传关键文件
+# outputs/chatglm3-qlora/checkpoint-*/
+
