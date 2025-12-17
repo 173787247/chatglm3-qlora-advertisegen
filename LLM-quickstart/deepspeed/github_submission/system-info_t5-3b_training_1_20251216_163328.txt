@@ -1,0 +1,41 @@
+=== 模型: t5-3b ===
+=== 阶段: training_1 ===
+=== 时间: Tue Dec 16 16:33:28 UTC 2025 ===
+
+=== CPU 信息 ===
+CPU 核心数: 32
+
+=== 内存信息 ===
+               total        used        free      shared  buff/cache   available
+Mem:           249Gi       6.2Gi       239Gi       4.0Mi       3.2Gi       241Gi
+Swap:          100Gi       7.0Mi        99Gi
+
+=== GPU 详细信息 ===
+name, memory.total [MiB], memory.used [MiB], memory.free [MiB], utilization.gpu [%], utilization.memory [%], temperature.gpu, power.draw [W]
+NVIDIA GeForce RTX 5080, 16303 MiB, 1255 MiB, 14635 MiB, 5 %, 0 %, 48, 48.33 W
+
+=== Top 10 进程（按 CPU）===
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root      1828 12.9  1.1 161878532 3036720 ?   Sl   16:28   0:37 /opt/conda/bin/python3.11 -u translation/run_translation.py --local_rank=0 --deepspeed config/ds_config_zero3.json --model_name_or_path t5-3b --do_train --do_eval --per_device_train_batch_size 1 --per_device_eval_batch_size 4 --output_dir output_dir --overwrite_output_dir --max_train_samples 500 --num_train_epochs 1 --dataset_name wmt16 --dataset_config ro-en --source_lang en --target_lang ro --fp16
+root      1558  1.8  0.2 152045032 746764 ?    Sl   16:28   0:05 /opt/conda/bin/python3.11 /opt/conda/bin/deepspeed --num_gpus=1 translation/run_translation.py --deepspeed config/ds_config_zero3.json --model_name_or_path t5-3b --do_train --do_eval --per_device_train_batch_size 1 --per_device_eval_batch_size 4 --output_dir output_dir --overwrite_output_dir --max_train_samples 500 --num_train_epochs 1 --dataset_name wmt16 --dataset_config ro-en --source_lang en --target_lang ro --fp16
+root      1664  1.7  0.2 152046040 751196 ?    Sl   16:28   0:05 /opt/conda/bin/python3.11 -u -m deepspeed.launcher.launch --world_info=eyJsb2NhbGhvc3QiOiBbMF19 --master_addr=127.0.0.1 --master_port=29500 --enable_each_rank_log=None --log_level=info translation/run_translation.py --deepspeed config/ds_config_zero3.json --model_name_or_path t5-3b --do_train --do_eval --per_device_train_batch_size 1 --per_device_eval_batch_size 4 --output_dir output_dir --overwrite_output_dir --max_train_samples 500 --num_train_epochs 1 --dataset_name wmt16 --dataset_config ro-en --source_lang en --target_lang ro --fp16
+root      1629  1.2  0.2 151805204 634240 ?    Sl   16:28   0:03 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1558 --read-fd=11 --write-fd=17
+root      1795  1.2  0.2 151805048 635232 ?    Sl   16:28   0:03 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1664 --read-fd=11 --write-fd=17
+root      1962  1.2  0.2 151805220 635356 ?    Sl   16:28   0:03 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1828 --read-fd=11 --write-fd=17
+root         1  0.0  0.0   4628  3584 pts/0    Ss+  15:51   0:00 bash
+root      1027  0.0  0.0   4364  1796 ?        S    16:26   0:00 bash -c cd /app && chmod +x *.sh && nohup bash monitor_training_simple.sh > monitor.log 2>&1 &
+root      1029  0.0  0.0   4364  3072 ?        S    16:26   0:00 bash monitor_training_simple.sh
+root      1517  0.0  0.0   4364  1544 ?        S    16:28   0:00 bash -c cd /app && bash run_full_training.sh > full_training.log 2>&1 &
+
+=== Top 10 进程（按内存）===
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root      1828 12.9  1.1 161878532 3036720 ?   Sl   16:28   0:37 /opt/conda/bin/python3.11 -u translation/run_translation.py --local_rank=0 --deepspeed config/ds_config_zero3.json --model_name_or_path t5-3b --do_train --do_eval --per_device_train_batch_size 1 --per_device_eval_batch_size 4 --output_dir output_dir --overwrite_output_dir --max_train_samples 500 --num_train_epochs 1 --dataset_name wmt16 --dataset_config ro-en --source_lang en --target_lang ro --fp16
+root      1664  1.7  0.2 152046040 751196 ?    Sl   16:28   0:05 /opt/conda/bin/python3.11 -u -m deepspeed.launcher.launch --world_info=eyJsb2NhbGhvc3QiOiBbMF19 --master_addr=127.0.0.1 --master_port=29500 --enable_each_rank_log=None --log_level=info translation/run_translation.py --deepspeed config/ds_config_zero3.json --model_name_or_path t5-3b --do_train --do_eval --per_device_train_batch_size 1 --per_device_eval_batch_size 4 --output_dir output_dir --overwrite_output_dir --max_train_samples 500 --num_train_epochs 1 --dataset_name wmt16 --dataset_config ro-en --source_lang en --target_lang ro --fp16
+root      1558  1.8  0.2 152045032 746764 ?    Sl   16:28   0:05 /opt/conda/bin/python3.11 /opt/conda/bin/deepspeed --num_gpus=1 translation/run_translation.py --deepspeed config/ds_config_zero3.json --model_name_or_path t5-3b --do_train --do_eval --per_device_train_batch_size 1 --per_device_eval_batch_size 4 --output_dir output_dir --overwrite_output_dir --max_train_samples 500 --num_train_epochs 1 --dataset_name wmt16 --dataset_config ro-en --source_lang en --target_lang ro --fp16
+root      1962  1.2  0.2 151805220 635356 ?    Sl   16:28   0:03 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1828 --read-fd=11 --write-fd=17
+root      1795  1.2  0.2 151805048 635232 ?    Sl   16:28   0:03 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1664 --read-fd=11 --write-fd=17
+root      1629  1.2  0.2 151805204 634240 ?    Sl   16:28   0:03 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1558 --read-fd=11 --write-fd=17
+root      1666  0.0  0.1 151674116 373348 ?    Sl   16:28   0:00 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1558 --read-fd=11 --write-fd=17
+root      1728  0.0  0.1 151674116 373124 ?    Sl   16:28   0:00 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1558 --read-fd=11 --write-fd=17
+root      1724  0.0  0.1 151674116 373120 ?    Sl   16:28   0:00 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1558 --read-fd=11 --write-fd=17
+root      1726  0.0  0.1 151674116 373120 ?    Sl   16:28   0:00 /opt/conda/bin/python3.11 /opt/conda/lib/python3.11/site-packages/torch/_inductor/compile_worker/__main__.py --pickler=torch._inductor.compile_worker.subproc_pool.SubprocPickler --kind=fork --workers=32 --parent=1558 --read-fd=11 --write-fd=17

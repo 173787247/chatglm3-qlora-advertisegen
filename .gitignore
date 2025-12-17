@@ -16,9 +16,11 @@ build/
 .env
 *.env
 
-# 模型文件（如果太大，可以不上传，但训练结果应该上传）
-# models/
-# outputs/chatglm3-qlora/checkpoint-*/
+# 模型文件 / 大体积训练产物（不建议提交）
+models/
+outputs/chatglm3-qlora/checkpoint-*/
+outputs/chatglm3-qlora/*.{bin,pt,pth,safetensors,model}
+outputs/chatglm3-qlora/tokenizer.model
 
 # Docker
 .dockerignore
@@ -33,7 +35,11 @@ build/
 .DS_Store
 Thumbs.db
 
-# 大文件（可选，根据需求决定是否上传）
-# 如果 outputs 太大，可以只上传关键文件
-# outputs/chatglm3-qlora/checkpoint-*/
+# DeepSpeed 作业：不要把缓存/大目录提交，提交 github_submission 即可
+LLM-quickstart/deepspeed/models/
+LLM-quickstart/deepspeed/output_dir/
+LLM-quickstart/deepspeed/training_monitor/
+LLM-quickstart/deepspeed/training_outputs/
+LLM-quickstart/deepspeed/full_training.log
+LLM-quickstart/deepspeed/monitor.log
 

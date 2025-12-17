@@ -1,0 +1,41 @@
+=== 模型: t5-11b ===
+=== 阶段: after_training ===
+=== 时间: Tue Dec 16 16:59:14 UTC 2025 ===
+
+=== CPU 信息 ===
+CPU 核心数: 32
+
+=== 内存信息 ===
+               total        used        free      shared  buff/cache   available
+Mem:           249Gi       1.3Gi       245Gi       4.0Mi       2.8Gi       246Gi
+Swap:          100Gi       7.0Mi        99Gi
+
+=== GPU 详细信息 ===
+name, memory.total [MiB], memory.used [MiB], memory.free [MiB], utilization.gpu [%], utilization.memory [%], temperature.gpu, power.draw [W]
+NVIDIA GeForce RTX 5080, 16303 MiB, 1227 MiB, 14663 MiB, 4 %, 0 %, 51, 49.59 W
+
+=== Top 10 进程（按 CPU）===
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0   4628  3584 pts/0    Ss+  15:51   0:00 bash
+root      1027  0.0  0.0   4364  1796 ?        S    16:26   0:00 bash -c cd /app && chmod +x *.sh && nohup bash monitor_training_simple.sh > monitor.log 2>&1 &
+root      1029  0.0  0.0   4364  3072 ?        S    16:26   0:00 bash monitor_training_simple.sh
+root      1517  0.0  0.0   4364  1544 ?        S    16:28   0:00 bash -c cd /app && bash run_full_training.sh > full_training.log 2>&1 &
+root      1518  0.0  0.0   5012  3584 ?        S    16:28   0:00 bash run_full_training.sh
+root      2593  0.0  0.0   4496  2048 ?        S    16:53   0:00 bash run_full_training.sh
+root      3150  0.0  0.0   2792  1280 ?        S    16:56   0:00 sleep 300
+root      3167  0.0  0.0   2792  1280 ?        S    16:58   0:00 sleep 300
+root      3176  0.0  0.0   7064  2816 ?        R    16:59   0:00 ps aux --sort=-%cpu
+root      3177  0.0  0.0   2804  1280 ?        S    16:59   0:00 head -11
+
+=== Top 10 进程（按内存）===
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0   4628  3584 pts/0    Ss+  15:51   0:00 bash
+root      1518  0.0  0.0   5012  3584 ?        S    16:28   0:00 bash run_full_training.sh
+root      1029  0.0  0.0   4364  3072 ?        S    16:26   0:00 bash monitor_training_simple.sh
+root      3178  0.0  0.0   7064  2560 ?        R    16:59   0:00 ps aux --sort=-%mem
+root      2593  0.0  0.0   4496  2048 ?        S    16:53   0:00 bash run_full_training.sh
+root      1027  0.0  0.0   4364  1796 ?        S    16:26   0:00 bash -c cd /app && chmod +x *.sh && nohup bash monitor_training_simple.sh > monitor.log 2>&1 &
+root      1517  0.0  0.0   4364  1544 ?        S    16:28   0:00 bash -c cd /app && bash run_full_training.sh > full_training.log 2>&1 &
+root      3150  0.0  0.0   2792  1280 ?        S    16:56   0:00 sleep 300
+root      3167  0.0  0.0   2792  1280 ?        S    16:58   0:00 sleep 300
+root      3179  0.0  0.0   2804  1280 ?        S    16:59   0:00 head -11
