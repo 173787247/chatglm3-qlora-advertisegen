@@ -39,6 +39,97 @@ def _device_of(model) -> torch.device:
         return next(model.parameters()).device
 
 
+def ensure_hidden_layers(config):
+    """
+    transformers 新版 generation/caching 会访问 config.num_hidden_layers；
+    ChatGLMConfig 可能只有 num_layers，做一次兼容映射。
+    """
+    if not hasattr(config, "num_hidden_layers"):
+        candidate = getattr(config, "num_layers", None)
+        if candidate is not None:
+            setattr(config, "num_hidden_layers", candidate)
+    return config
+
+
+def ensure_past_extractor(model):
+    """
+    部分 transformers 版本会调用 model._extract_past_from_model_output；
+    ChatGLM 的 remote_code 可能没有该方法，补一个最小实现以兼容。
+    """
+    if not hasattr(model, "_extract_past_from_model_output"):
+        def _extract_past_from_model_output(self, outputs):
+            """
+            ChatGLM3 的 remote_code 在 generation 里会用：
+              self._extract_past_from_model_output(outputs)[1]
+            因此这里必须返回长度为 2 的 tuple。
+            当 use_cache=False 时，past_key_values 通常为 None，返回 (None, None) 即可。
+            """
+            past = getattr(outputs, "past_key_values", None)
+            return (None, past)
+
+        setattr(model.__class__, "_extract_past_from_model_output", _extract_past_from_model_output)
+
+def ensure_safe_get_masks(model):
+    """
+    ChatGLM3 的 remote_code 在某些 transformers 组合下会传入形如 (None, xxx) 的 past_key_values，
+    get_masks() 里直接 past_key_values[0][0].shape 会报错。这里做一个最小兜底：
+    - past_key_values 存在但 past_key_values[0][0] 为 None -> 视为无 past（past_length=0）
+    """
+    def _wrap_get_masks(orig_fn):
+        """
+        ChatGLM 的 get_masks 逻辑只认识“legacy cache”（list/tuple of layers）。
+        transformers 新版可能传入 DynamicCache 等对象；其中可能出现首元素为 None，
+        会触发 past_key_values[0][0].shape 报错。这里尽量将“空/无效 cache”归一为 None。
+        """
+        def _safe_get_masks(self, input_ids, past_key_values, padding_mask=None):
+            try:
+                if past_key_values:
+                    first = None
+                    # 1) list/tuple 直接取
+                    if isinstance(past_key_values, (list, tuple)):
+                        first = past_key_values[0] if len(past_key_values) > 0 else None
+                    else:
+                        # 2) DynamicCache / 其他对象：尽量通过下标或 len() 判断
+                        try:
+                            if hasattr(past_key_values, "__len__") and len(past_key_values) == 0:
+                                past_key_values = None
+                            else:
+                                first = past_key_values[0]  # type: ignore[index]
+                        except Exception:
+                            first = None
+
+                    # 统一处理：first 为 None 或 first[0] 为 None 都视为无 past
+                    if first is None:
+                        past_key_values = None
+                    elif isinstance(first, (list, tuple)):
+                        if len(first) == 0 or first[0] is None:
+                            past_key_values = None
+            except Exception:
+                pass
+
+            return orig_fn(self, input_ids, past_key_values, padding_mask=padding_mask)
+
+        return _safe_get_masks
+
+    def _patch_target(target_obj):
+        if target_obj is None:
+            return
+        # 已经 patch 过就跳过
+        if getattr(target_obj.__class__, "_patched_safe_get_masks", False):
+            return
+        # 沿 MRO 找到真正定义 get_masks 的类，并替换它（否则调用仍会落到原实现）
+        for cls in target_obj.__class__.mro():
+            if "get_masks" in cls.__dict__:
+                orig = cls.__dict__["get_masks"]
+                setattr(cls, "get_masks", _wrap_get_masks(orig))
+                setattr(cls, "_patched_safe_get_masks", True)
+                return
+
+    # ChatGLM 的 get_masks 很可能定义在 model.transformer 的类上
+    _patch_target(model)
+    _patch_target(getattr(model, "transformer", None))
+
+
 @lru_cache(maxsize=2)
 def load_base_model_and_tokenizer(model_name_or_path: str) -> Tuple[object, object]:
     """只加载一次，避免每次交互都重新加载大模型。"""
@@ -49,6 +140,15 @@ def load_base_model_and_tokenizer(model_name_or_path: str) -> Tuple[object, obje
         device_map="auto",
         torch_dtype=torch.float16 if torch.cuda.is_available() else None,
     )
+    # 兼容 transformers 新版缓存/生成逻辑
+    ensure_hidden_layers(model.config)
+    ensure_past_extractor(model)
+    ensure_safe_get_masks(model)
+    # 避免 use_cache 导致不同版本缓存对象不兼容
+    try:
+        model.config.use_cache = False
+    except Exception:
+        pass
     model.eval()
     model.requires_grad_(False)
     return model, tokenizer
@@ -71,35 +171,41 @@ def load_finetuned_model(model_name_or_path: str, adapter_dir: str) -> object:
 
 
 def _chat(model, tokenizer, query: str, gen: GenConfig) -> str:
-    """兼容 chatglm3 的 .chat；若失败则 fallback 到 generate。"""
+    """
+    推理入口：
+    - 为了避免 transformers 新版 cache(DynamicCache) 与 ChatGLM remote_code 的兼容问题，
+      这里**不再使用 model.chat()**，统一走 generate，并强制 use_cache=False。
+    """
     query = (query or "").strip()
     if not query:
         return ""
 
+    device = _device_of(model)
+    inputs = tokenizer(query, return_tensors="pt").to(device)
+
+    # 强制关闭 cache，避免 kv cache 中出现 None 导致 torch.cat 报错
     try:
-        resp, _ = model.chat(
-            tokenizer,
-            query=query,
-            history=[],
-            max_new_tokens=gen.max_new_tokens,
-            top_p=gen.top_p,
-            temperature=gen.temperature,
-        )
-        return str(resp).strip()
+        model.config.use_cache = False
     except Exception:
-        device = _device_of(model)
-        inputs = tokenizer(query, return_tensors="pt").to(device)
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs,
-                max_new_tokens=gen.max_new_tokens,
-                do_sample=True,
-                temperature=gen.temperature,
-                top_p=gen.top_p,
-                pad_token_id=tokenizer.pad_token_id,
-            )
-        text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return text.replace(query, "").strip()
+        pass
+    try:
+        if hasattr(model, "generation_config") and model.generation_config is not None:
+            model.generation_config.use_cache = False
+    except Exception:
+        pass
+
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=gen.max_new_tokens,
+            do_sample=True,
+            temperature=gen.temperature,
+            top_p=gen.top_p,
+            pad_token_id=tokenizer.pad_token_id,
+            use_cache=False,
+        )
+    text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return text.replace(query, "").strip()
 
 
 def compare_generate(
